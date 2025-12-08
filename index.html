@@ -10,6 +10,8 @@
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/qgis2web.css">
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
@@ -20,10 +22,9 @@
             margin: 0;
         }
         </style>
-        <title>Duurzaamheid</title>
+        <title></title>
     </head>
     <body>
-	<h1 style="text-align:center;">Duurzaamheid</h1>
         <div id="map">
         </div>
         <script src="js/qgis2web_expressions.js"></script>
@@ -38,6 +39,9 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet-measure.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
         <script src="data/KLIC_1.js"></script>
         <script src="data/EnergielabelHuizen_2.js"></script>
         <script src="data/BouwjaarHuizen_3.js"></script>
@@ -61,7 +65,7 @@
         }
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[52.168393836125915,5.449797452879229],[52.17591184844735,5.484137329047941]]);
+        }).fitBounds([[52.167182726210775,5.459470033424754],[52.17094199350585,5.467358285353615]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -392,7 +396,7 @@
             });
             var popupContent = '<table>\
                     <tr>\
-                        <td colspan="2"><strong>dominant_l</strong><br />' + (feature.properties['dominant_l'] !== null ? autolinker.link(String(feature.properties['dominant_l']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                        <td colspan="2"><strong>label</strong><br />' + (feature.properties['label'] !== null ? autolinker.link(String(feature.properties['label']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             var content = removeEmptyRowsFromPopupContent(popupContent, feature);
@@ -403,7 +407,7 @@
         }
 
         function style_EnergielabelHuizen_2_0(feature) {
-            switch(String(feature.properties['dominant_l'])) {
+            switch(String(feature.properties['label'])) {
                 case 'A+++':
                     return {
                 pane: 'pane_EnergielabelHuizen_2',
@@ -565,7 +569,7 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(134,134,134,1.0)',
+                fillColor: 'rgba(133,133,133,1.0)',
                 interactive: true,
             }
                     break;
@@ -905,60 +909,234 @@
             //openedSymbol: '&#8863; &#x1f5c1;',
             //collapseAll: 'Collapse all',
             //expandAll: 'Expand all',
-            collapsed: false, 
+            collapsed: true,
         });
         lay.addTo(map);
-		document.addEventListener("DOMContentLoaded", function() {
-            // set new Layers List height which considers toggle icon
-            function newLayersListHeight() {
-                var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
-                if (layerScrollbarElement) {
-                    var layersListElement = document.querySelector('.leaflet-control-layers-list');
-                    var originalHeight = layersListElement.style.height 
-                        || window.getComputedStyle(layersListElement).height;
-                    var newHeight = parseFloat(originalHeight) - 50;
-                    layersListElement.style.height = newHeight + 'px';
-                }
-            }
-            var isLayersListExpanded = true;
-            var controlLayersElement = document.querySelector('.leaflet-control-layers');
-            var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
-            // toggle Collapsed/Expanded and apply new Layers List height
-            toggleLayerControl.addEventListener('click', function() {
-                if (isLayersListExpanded) {
-                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
-                } else {
-                    controlLayersElement.classList.add('leaflet-control-layers-expanded');
-                }
-                isLayersListExpanded = !isLayersListExpanded;
-                newLayersListHeight()
-            });	
-			// apply new Layers List height if toggle layerstree
-			if (controlLayersElement) {
-				controlLayersElement.addEventListener('click', function(event) {
-					var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
-					if (toggleLayerHeaderPointer) {
-						newLayersListHeight();
-					}
-				});
-			}
-            // Collapsed/Expanded at Start to apply new height
-            setTimeout(function() {
-                toggleLayerControl.click();
-            }, 10);
-            setTimeout(function() {
-                toggleLayerControl.click();
-            }, 10);
-            // Collapsed touch/small screen
-            var isSmallScreen = window.innerWidth < 650;
-            if (isSmallScreen) {
-                setTimeout(function() {
-                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
-                    isLayersListExpanded = !isLayersListExpanded;
-                }, 500);
-            }  
-        });       
         setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"bouwjaar": "real","label": "str","onderverdeling": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_bouwjaar = document.createElement("div");
+            div_bouwjaar.id = "div_bouwjaar";
+            div_bouwjaar.className = "slider";
+            document.getElementById("menu").appendChild(div_bouwjaar);
+            var lab_bouwjaar = document.createElement('div');
+            lab_bouwjaar.innerHTML  = 'bouwjaar: <span id="val_bouwjaar"></span>';
+            lab_bouwjaar.className = 'filterlabel';
+            document.getElementById("menu").appendChild(lab_bouwjaar);
+            var reset_bouwjaar = document.createElement('div');
+            reset_bouwjaar.innerHTML = 'clear filter';
+            reset_bouwjaar.className = 'filterlabel';
+            lab_bouwjaar.className = 'filterlabel';
+            reset_bouwjaar.onclick = function() {
+                sel_bouwjaar.noUiSlider.reset();
+            };
+            document.getElementById("menu").appendChild(reset_bouwjaar);
+            var sel_bouwjaar = document.getElementById('div_bouwjaar');
+            noUiSlider.create(sel_bouwjaar, {
+                connect: true,
+                start: [1867.0, 2025.0],
+                range: {
+                min: 1867.0,
+                max: 2025.0
+                }
+            });
+            sel_bouwjaar.noUiSlider.on('update', function (values) {
+            val_bouwjaar = document.getElementById('val_bouwjaar');
+            val_bouwjaar.innerHTML = values.join(' - ');
+                filterFunc()
+            });
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_label = document.createElement('div');
+            div_label.id = "div_label";
+            div_label.className= "filterselect";
+            document.getElementById("menu").appendChild(div_label);
+            sel_label = document.createElement('select');
+            sel_label.multiple = true;
+            sel_label.size = 10;
+            sel_label.id = "sel_label";
+            var label_options_str = "<option value='' unselected></option>";
+            sel_label.onchange = function(){filterFunc()};
+            label_options_str  += '<option value="NULL">NULL</option>';
+            label_options_str  += '<option value="A">A</option>';
+            label_options_str  += '<option value="A+">A+</option>';
+            label_options_str  += '<option value="A++">A++</option>';
+            label_options_str  += '<option value="A+++">A+++</option>';
+            label_options_str  += '<option value="B">B</option>';
+            label_options_str  += '<option value="C">C</option>';
+            label_options_str  += '<option value="D">D</option>';
+            label_options_str  += '<option value="E">E</option>';
+            label_options_str  += '<option value="F">F</option>';
+            label_options_str  += '<option value="G">G</option>';
+            sel_label.innerHTML = label_options_str;
+            div_label.appendChild(sel_label);
+            var lab_label = document.createElement('div');
+            lab_label.innerHTML = 'label';
+            lab_label.className = 'filterlabel';
+            div_label.appendChild(lab_label);
+            var reset_label = document.createElement('div');
+            reset_label.innerHTML = 'clear filter';
+            reset_label.className = 'filterlabel';
+            reset_label.onclick = function() {
+                var options = document.getElementById("sel_label").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_label.appendChild(reset_label);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_onderverdeling = document.createElement('div');
+            div_onderverdeling.id = "div_onderverdeling";
+            div_onderverdeling.className= "filterselect";
+            document.getElementById("menu").appendChild(div_onderverdeling);
+            sel_onderverdeling = document.createElement('select');
+            sel_onderverdeling.multiple = true;
+            sel_onderverdeling.size = 10;
+            sel_onderverdeling.id = "sel_onderverdeling";
+            var onderverdeling_options_str = "<option value='' unselected></option>";
+            sel_onderverdeling.onchange = function(){filterFunc()};
+            onderverdeling_options_str  += '<option value="Drinkwater">Drinkwater</option>';
+            onderverdeling_options_str  += '<option value="Elektriciteit (LS)">Elektriciteit (LS)</option>';
+            onderverdeling_options_str  += '<option value="Elektriciteit (MS)">Elektriciteit (MS)</option>';
+            onderverdeling_options_str  += '<option value="Gas (hoge druk)">Gas (hoge druk)</option>';
+            onderverdeling_options_str  += '<option value="Gas (lage druk)">Gas (lage druk)</option>';
+            onderverdeling_options_str  += '<option value="Glasvezelnet (grootschalig)">Glasvezelnet (grootschalig)</option>';
+            onderverdeling_options_str  += '<option value="Laagspanning">Laagspanning</option>';
+            onderverdeling_options_str  += '<option value="Middenspanning">Middenspanning</option>';
+            onderverdeling_options_str  += '<option value="Olie, gas en chemie">Olie, gas en chemie</option>';
+            onderverdeling_options_str  += '<option value="Ondersteunend Netbeheer">Ondersteunend Netbeheer</option>';
+            onderverdeling_options_str  += '<option value="Riool onder druk">Riool onder druk</option>';
+            onderverdeling_options_str  += '<option value="Riool onder vrijverval">Riool onder vrijverval</option>';
+            onderverdeling_options_str  += '<option value="Telecommunicatie">Telecommunicatie</option>';
+            onderverdeling_options_str  += '<option value="Water">Water</option>';
+            sel_onderverdeling.innerHTML = onderverdeling_options_str;
+            div_onderverdeling.appendChild(sel_onderverdeling);
+            var lab_onderverdeling = document.createElement('div');
+            lab_onderverdeling.innerHTML = 'onderverdeling';
+            lab_onderverdeling.className = 'filterlabel';
+            div_onderverdeling.appendChild(lab_onderverdeling);
+            var reset_onderverdeling = document.createElement('div');
+            reset_onderverdeling.innerHTML = 'clear filter';
+            reset_onderverdeling.className = 'filterlabel';
+            reset_onderverdeling.onclick = function() {
+                var options = document.getElementById("sel_onderverdeling").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_onderverdeling.appendChild(reset_onderverdeling);
         </script>        
     </body>
 </html>
